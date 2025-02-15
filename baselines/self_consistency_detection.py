@@ -122,7 +122,7 @@ def main():
     
     results = {
         'result_dict': result_dict,
-        'data': data,  # Now includes consistency_score and multiple_predictions
+        'data': data, 
         'threshold': args.threshold,
         'num_samples': args.infer_k
     }
