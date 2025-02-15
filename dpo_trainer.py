@@ -51,7 +51,7 @@ class ScriptArguments:
         metadata={"help": "the location of the checkpoint path"},
     )
     data_dir: Optional[str] = field(
-        default="data/dpo/train",
+        default="",
         metadata={"help": "the location of the data path"},
     )
     cache_path: Optional[str] = field(
@@ -113,7 +113,7 @@ class ScriptArguments:
     save_steps: Optional[int] = field(default=50, metadata={"help": "the saving frequency"})
     eval_steps: Optional[int] = field(default=10, metadata={"help": "the evaluation frequency"})
 
-    output_dir: Optional[str] = field(default="./results", metadata={"help": "the output directory"})
+    output_dir: Optional[str] = field(default="", metadata={"help": "the output directory"})
     load_in_4bit: Optional[bool] = field(default=False, metadata={"help": "whether to load the model in 4bit"})
     model_dtype: Optional[str] = field(
         default="float16", metadata={"help": "model_dtype[float16, bfloat16, float] for loading."}

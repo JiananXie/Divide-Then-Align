@@ -124,7 +124,7 @@ def compute_evaluation_metrics(predictions, answers, types, refusal_answer="NO A
         "F1": f1,
         "Denoise rate": denoise,
         "Context utilization rate": ctx_util,
-        "Hullucination rate": hallucination,
+        "Hallucination rate": hallucination,
         "Abstain Recall": abstain_recall,
         "Abstain Precision": abstain_precision,
         "Abstain F1": abstain_f1

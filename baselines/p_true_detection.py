@@ -64,15 +64,15 @@ The possible answer is:"""
     return probs[1].item() if reversed else probs[0].item()
 
 def compute_p_true_metrics(scores, data, threshold=0.5):
-    """计算p_true检测的评估指标
+    """Calculate evaluation metrics for p_true detection
     Args:
-        scores: p_true分数列表
-        data: 原始数据列表，包含answer, answers, type等字段
-        threshold: p_true的阈值
+        scores: list of p_true scores
+        data: original data list containing answer, answers, type fields
+        threshold: threshold for p_true
     Returns:
-        dict: 包含各项指标的字典
+        dict: dictionary containing various metrics
     """
-    # 初始化结果统计
+    # Initialize result statistics
     result_dict = {
         'kg': {'tt': 0, 'oo': 0},
         'kn': {'tt': 0, 'oo': 0}, 
@@ -80,25 +80,22 @@ def compute_p_true_metrics(scores, data, threshold=0.5):
         'un': {'tt': 0, 'oo': 0}
     }
     
-    # 统计各类型数量
+    # Count numbers for each type
     len_kg = sum(1 for item in data if item['type'] == 'kg')
     len_kn = sum(1 for item in data if item['type'] == 'kn')
     len_ug = sum(1 for item in data if item['type'] == 'ug')
     len_un = sum(1 for item in data if item['type'] == 'un')
     
-    # 计算每个预测的指标
+    # Calculate metrics for each prediction
     for score, item in zip(scores, data):
-        if score > threshold:  # 模型选择回答
-            # 检查答案是否正确
+        if score > threshold: 
             output = compute_metrics(item['prediction'], item['answers'])
             em = output['em']
-            # 增加tt
             result_dict[item['type']]['tt'] += em
-        else:  # 模型选择拒答
-            # 增加oo
+        else: 
             result_dict[item['type']]['oo'] += 1
     
-    # 计算最终指标
+    # Calculate final metrics
     acc = (result_dict['kg']['tt'] + result_dict['kn']['tt'] + 
            result_dict['ug']['tt'] + result_dict['un']['oo']) / (len_kg + len_kn + len_ug + len_un)
     
@@ -113,7 +110,7 @@ def compute_p_true_metrics(scores, data, threshold=0.5):
     
     denoise = result_dict['kn']['tt'] / len_kn if len_kn > 0 else 0
     ctx_util = result_dict['ug']['tt'] / len_ug if len_ug > 0 else 0
-    hullucination = 1 - (result_dict['un']['tt'] + result_dict['un']['oo']) / len_un if len_un > 0 else 0
+    hallucination = 1 - (result_dict['un']['tt'] + result_dict['un']['oo']) / len_un if len_un > 0 else 0
     abstain_recall = result_dict['un']['oo'] / len_un if len_un > 0 else 0
     
     total_oo = sum(result_dict[k]['oo'] for k in ['kg', 'kn', 'ug', 'un'])
@@ -125,7 +122,7 @@ def compute_p_true_metrics(scores, data, threshold=0.5):
         "Precision": precision,
         "Denoise rate": denoise,
         "Context utilization rate": ctx_util,
-        "Hullucination rate": hullucination,
+        "Hallucination rate": hallucination,
         "Abstain Recall": abstain_recall,
         "Abstain Precision": abstain_precision
     }
@@ -135,7 +132,7 @@ def compute_p_true_metrics(scores, data, threshold=0.5):
 def main():
     args = parse_args()
     
-    # 初始化模型和tokenizer
+    # Initialize model and tokenizer
     tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_path)
     llm = LLM(model=args.model_name_or_path,
             tensor_parallel_size=1,
@@ -144,27 +141,23 @@ def main():
         state_dict = torch.load(args.checkpoint_path, map_location='cpu')
         llm.llm_engine.model_executor.driver_worker.model_runner.model.load_weights(state_dict.items())
     
-    # 使用json.load加载数据
     with open(args.data_path, 'r', encoding='utf-8') as f:
         raw_data = json.load(f)
     
-    # 过滤掉最后的统计数据，只保留包含必要字段的数据条目
     data = [item for item in raw_data if isinstance(item, dict) and 
             all(key in item for key in ['question', 'prediction', 'type'])]
     
     all_scores = []
     
-    # 获取所有回答的p_true分数
     for item in tqdm(data):
         score = get_p_true_score(llm, tokenizer, item['question'], item['prediction'], args.reversed)
         all_scores.append(score)
-        # 将score添加到数据中
         item['p_true_score'] = score
     
-    # 计算评估指标
+    # Calculate evaluation metrics
     result_dicts = compute_p_true_metrics(all_scores, data, args.threshold)
     
-    # 保存结果
+    # Save results
     os.makedirs(args.result_path, exist_ok=True)
     model_name = os.path.basename(args.model_name_or_path)
     result_file = os.path.join(
@@ -174,7 +167,7 @@ def main():
     
     results = {
         'result_dicts': result_dicts,
-        'data': data,  # 包含了每个样本的p_true_score
+        'data': data, 
         'threshold': args.threshold,
         'reversed': args.reversed
     }

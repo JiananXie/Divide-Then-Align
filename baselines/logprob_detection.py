@@ -25,15 +25,15 @@ def parse_args():
     return args
 
 def evaluate_predictions(scores, data, threshold=0.5):
-    """计算logprob检测的评估指标
+    """Calculate evaluation metrics for logprob detection
     Args:
-        scores: logprob分数列表
-        data: 原始数据列表，包含answer, answers, type等字段
-        threshold: logprob的阈值
+        scores: list of logprob scores
+        data: original data list containing answer, answers, type fields
+        threshold: threshold for logprob
     Returns:
-        dict: 包含各项指标的字典
+        dict: dictionary containing various metrics
     """
-    # 初始化结果统计
+    # Initialize result statistics
     result_dict = {
         'kg': {'tt': 0, 'oo': 0},
         'kn': {'tt': 0, 'oo': 0}, 
@@ -41,25 +41,22 @@ def evaluate_predictions(scores, data, threshold=0.5):
         'un': {'tt': 0, 'oo': 0}
     }
     
-    # 统计各类型数量
+    # Count numbers for each type
     len_kg = sum(1 for item in data if item['type'] == 'kg')
     len_kn = sum(1 for item in data if item['type'] == 'kn')
     len_ug = sum(1 for item in data if item['type'] == 'ug')
     len_un = sum(1 for item in data if item['type'] == 'un')
     
-    # 计算每个预测的指标
+    # Calculate metrics for each prediction
     for score, item in zip(scores, data):
-        if score >= threshold:  # 模型选择回答
-            # 检查答案是否正确
+        if score >= threshold: 
             output = compute_metrics(item['prediction'], item['answers'])
             em = output['em']
-            # 增加tt
             result_dict[item['type']]['tt'] += em
-        else:  # 模型选择拒答
-            # 增加oo
+        else: 
             result_dict[item['type']]['oo'] += 1
     
-    # 计算最终指标
+    # Calculate final metrics
     total = len_kg + len_kn + len_ug + len_un
     if total == 0:
         return {
@@ -69,7 +66,7 @@ def evaluate_predictions(scores, data, threshold=0.5):
                 "Precision": 0.0,
                 "Denoise rate": 0.0,
                 "Context utilization rate": 0.0,
-                "Hullucination rate": 0.0,
+                "Hallucination rate": 0.0,
                 "Abstain Recall": 0.0,
                 "Abstain Precision": 0.0
             }
@@ -78,21 +75,18 @@ def evaluate_predictions(scores, data, threshold=0.5):
     acc = (result_dict['kg']['tt'] + result_dict['kn']['tt'] + 
            result_dict['ug']['tt'] + result_dict['un']['oo']) / total
     
-    # 计算precision时检查分母是否为0
     precision_denominator = (result_dict['kg']['tt'] + result_dict['kn']['tt'] + 
                            result_dict['ug']['tt'] + result_dict['un']['tt'])
     precision = (result_dict['kg']['tt'] + result_dict['kn']['tt'] + result_dict['ug']['tt']) / \
                precision_denominator if precision_denominator > 0 else 0.0
     
-    # 计算recall时检查分母是否为0
     recall_denominator = (len_kg + len_kn + len_ug)
     recall = (result_dict['kg']['tt'] + result_dict['kn']['tt'] + result_dict['ug']['tt']) / \
              recall_denominator if recall_denominator > 0 else 0.0
     
-    # 其他指标也添加防护
     denoise = result_dict['kn']['tt'] / len_kn if len_kn > 0 else 0.0
     ctx_util = result_dict['ug']['tt'] / len_ug if len_ug > 0 else 0.0
-    hullucination = 1 - (result_dict['un']['tt'] + result_dict['un']['oo']) / len_un if len_un > 0 else 0.0
+    hallucination = 1 - (result_dict['un']['tt'] + result_dict['un']['oo']) / len_un if len_un > 0 else 0.0
     abstain_recall = result_dict['un']['oo'] / len_un if len_un > 0 else 0.0
     
     total_oo = sum(result_dict[k]['oo'] for k in ['kg', 'kn', 'ug', 'un'])
@@ -104,7 +98,7 @@ def evaluate_predictions(scores, data, threshold=0.5):
         "Precision": precision,
         "Denoise rate": denoise,
         "Context utilization rate": ctx_util,
-        "Hullucination rate": hullucination,
+        "Hallucination rate": hallucination,
         "Abstain Recall": abstain_recall,
         "Abstain Precision": abstain_precision
     }
@@ -118,17 +112,14 @@ def main():
     with open(args.data_path, 'r', encoding='utf-8') as f:
         data = json.load(f)
     
-    # 使用vLLM生成预测，设置return_logprobs=True
+    # Generate predictions using vLLM with return_logprobs=True
     outputs = vllm_w_retrieval(args, data, return_logprobs=True)
     
-    # 一次循环处理所有数据
     for item, output in zip(data, outputs):
-        # 提取logprobs和probabilities
         logprobs = output['logits']
         probs = output['probabilities']
         
         if not logprobs:
-            # 初始化所有分数为-inf
             scores = {
                 'logprob_min': float('-inf'),
                 'logprob_max': float('-inf'),
@@ -140,7 +131,6 @@ def main():
                 'prob_last': 0.0
             }
         else:
-            # 计算所有统计指标
             scores = {
                 'logprob_min': min(logprobs),
                 'logprob_max': max(logprobs),
@@ -152,21 +142,18 @@ def main():
                 'prob_last': probs[-1]
             }
         
-        # 保存所有分数
         item['scores'] = scores
-        # 根据指定的metric选择分数
         item['logprob_score'] = scores[f'logprob_{args.metric}']
-        # 提取并保存预测文本
         item['prediction'] = extract_answer(args, output['text'])
     
-    # 计算评估指标
+    # Calculate evaluation metrics
     result_dict = evaluate_predictions(
         scores=[item['logprob_score'] for item in data],
         data=data,
         threshold=args.threshold
     )
     
-    # 保存结果
+    # Save results
     os.makedirs(args.result_path, exist_ok=True)
     model_name = os.path.basename(args.model_name_or_path)
     result_file = os.path.join(
@@ -176,7 +163,7 @@ def main():
     
     results = {
         'result_dict': result_dict,
-        'data': data,  # 现在包含了每个样本的prediction、所有分数和选用的logprob_score
+        'data': data, 
         'threshold': args.threshold,
         'metric': args.metric
     }

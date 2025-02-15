@@ -1,6 +1,51 @@
 import torch
 from vllm import LLM, SamplingParams
-from transformers import AutoTokenizer
+from transformers import AutoTokenizer, AutoModelForCausalLM
+from peft import PeftModel
+import os
+import json
+
+def merge_and_save_peft_model(model_path):
+    """
+    Load PEFT model, merge it with base model
+    """
+    print(f"Loading PEFT model from {model_path}")
+    
+    # Get base model name from adapter_config.json
+    with open(os.path.join(model_path, "adapter_config.json"), 'r') as f:
+        config = json.load(f)
+    base_model_name = config.get("base_model_name_or_path")
+    
+    # Create merged model directory
+    merged_path = os.path.join(os.path.dirname(model_path), f"{os.path.basename(model_path)}_merged")
+    if os.path.exists(merged_path):
+        print(f"Using existing merged model at {merged_path}")
+        return merged_path
+        
+    print(f"Loading base model from {base_model_name}")
+    base_model = AutoModelForCausalLM.from_pretrained(
+        base_model_name,
+        torch_dtype=torch.float16,
+        device_map={"": 0}
+    )
+    
+    print("Loading PEFT adapters")
+    model = PeftModel.from_pretrained(base_model, model_path)
+    
+    print("Merging weights")
+    model = model.merge_and_unload()
+    
+    print(f"Saving merged model to {merged_path}")
+    os.makedirs(merged_path, exist_ok=True)
+    model.save_pretrained(merged_path)
+    
+    # Save tokenizer
+    tokenizer = AutoTokenizer.from_pretrained(base_model_name)
+    tokenizer.save_pretrained(merged_path)
+    
+    print("Model merging complete")
+    return merged_path
+
 
 def vllm_w_retrieval(args,data):
     sys = "You need to complete the question-and-answer pair. The answers should be short phrases or entities, not full sentences. If you don't know the answer and the following contexts do not contain the necessay information to answer the question, respond with 'This question is beyond the scope of my knowledge and the references, I don't know the answer'."
