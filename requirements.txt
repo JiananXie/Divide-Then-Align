@@ -1,0 +1,12 @@
+accelerate==0.34.2
+datasets==3.0.0
+matplotlib==3.8.4
+numpy==2.2.3
+openpyxl==3.1.2
+pandas==2.2.3
+peft==0.14.0
+torch==2.4.0
+tqdm==4.66.4
+transformers==4.46.3
+trl==0.12.1
+vllm==0.6.1.post2
