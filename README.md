@@ -7,10 +7,10 @@
 
 ---
 
-## 📰 News
+## 🔥 News
 - **[2025.06]** Dataset divided by $\mathrm{KB}_\mathrm{r}$ is released [here](https://drive.google.com/file/d/1zQzvh3NVRxKz7mECVYl2RW6-v2-oHhso/view?usp=drive_link).
 
-- **🎉 [2025.05]** Our paper has been accepted by **ACL 2025 Main Conference(The 63nd Annual Meeting of the Association for Computational Linguistics)**! [[Paper](https://arxiv.org/abs/2505.20871)]
+- **[2025.05]** Our paper has been accepted by **ACL 2025 Main Conference(The 63nd Annual Meeting of the Association for Computational Linguistics)**! [[Paper](https://arxiv.org/abs/2505.20871)]🎉
 
 
 ## 📖 Abstract
@@ -151,9 +151,9 @@ CUDA_VISIBLE_DEVICES=5 accelerate launch \
 </details>
 
 
-## 📊 Evaluation
+## 📈 Evaluation
 
-Evaluate models on knowledge data containing four knowledge quadrants derived from the base model. Run `eval.sh` to evaluate the model. Results including predictions and metrics are stored in `result/model_name`.
+Evaluate models on knowledge data containing four knowledge quadrants derived from the base model. Run `eval.sh` to evaluate the model. Results including predictions and metrics are stored in `result/model_name`. Furthermore, baseline implementations are available in `baselines/` directory:
 
 <details>
 <summary>📋 Evaluation Script</summary>
@@ -182,13 +182,6 @@ CUDA_VISIBLE_DEVICES=1 python evaluations.py \
 ```
 </details>
 
-### 📈 Baseline Comparisons
-
-Baseline implementations are available in `baselines/` directory:
-- **ICL Detection**: In-context learning based detection
-- **LogProb Detection**: Log probability based detection  
-- **P-True Detection**: Probability-based truth detection
-- **Self-Consistency Detection**: Self-consistency based detection
 
 
 
