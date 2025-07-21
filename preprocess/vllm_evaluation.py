@@ -52,9 +52,10 @@ def vllm_w_retrieval(args,data):
     sys_ctx = 'The following context will help you complete the question-and-answer pair.\nContext:'
     sys_ctxs = 'The following contexts will help you complete the question-and-answer pair.'
     rep_penalty = 1
-    if 'llama2' in args.model_name_or_path or 'raat' in args.model_name_or_path:
-        prompt='<<SYS>>\n{system_prompt}\n<</SYS>>\n\n[INST] {ctx}\n{query} [/INST]'
-        if not args.checkpoint_path:
+    if 'llama2' in args.model_name_or_path:
+        if args.checkpoint_path:
+            prompt='<<SYS>>\n{system_prompt}\n<</SYS>>\n\n[INST] {ctx}\n{query} [/INST]'
+        else:
             rep_penalty = 1.1
             examples = [
                 '\nQuestion: What is the capital of France?\nAnswer: Paris.',
@@ -70,6 +71,8 @@ def vllm_w_retrieval(args,data):
             '\nExample 3:\nQuestion: Which element has the atomic number 1?\nAnswer: Hydrogen.'
         ]
         prompt='{system_prompt}\n\n{ctx}\nDirectly answer the question without any other words.{query}'
+    elif 'raat' in args.model_name_or_path:
+        prompt='<<SYS>>\n{system_prompt}\n<</SYS>>\n\n[INST] {ctx}\n{query} [/INST]'
     elif 'chatqa' in args.model_name_or_path:
         prompt='{system_prompt}\n\n{ctx}\n{query}'
         tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_path)

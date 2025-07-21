@@ -8,12 +8,13 @@
 ---
 
 ## 🔥 News
+- **[2025.07]** The checkpoints for DTA-trained RAAT and ChatQA1.5 are now available to facilitate academic use. Weights are released [here](https://huggingface.co/collections/Itandy/divide-then-align-6879b57c2dd422188a27c0d4).
 - **[2025.06]** Dataset divided by $\mathrm{KB}_\mathrm{r}$ is released [here](https://drive.google.com/file/d/1zQzvh3NVRxKz7mECVYl2RW6-v2-oHhso/view?usp=drive_link).
 
 - **[2025.05]** Our paper has been accepted by **ACL 2025 Main Conference(The 63nd Annual Meeting of the Association for Computational Linguistics)**! [[Paper](https://arxiv.org/abs/2505.20871)]🎉
 
 
-## 📖 Abstract
+## 📖 Overview
 
 This work introduces **Divide-Then-Align (DTA)**, a novel approach for honest alignment in Retrieval-Augmented Generation (RAG) systems. By dividing knowledge into 4 quadrants based on model and retrieval capabilities, we enable more precise alignment that respects the knowledge boundaries of RAG systems.
 
@@ -38,7 +39,7 @@ pip install -r requirements.txt
 ```
 
 
-### 🛠️ Knowledge Division and Data Construction
+## 🛠️ Knowledge Division and Data Construction
 
 We provide the processed data in `data_kbrag` directory. The **nq**, **triviaqa**, and **webq** folders contain data divided by $\mathrm{KB}_\mathrm{r}$ through GPT-4o API. You can download [here](https://drive.google.com/file/d/1zQzvh3NVRxKz7mECVYl2RW6-v2-oHhso/view?usp=drive_link).
 
@@ -92,7 +93,7 @@ CUDA_VISIBLE_DEVICES=3 python data_constructer.py \
 
 ## 🚀 Training
 
-Run `train.sh` to train the model with DTA (Divide-Then-Align) methodology. The following command reproduces the DTA-trained RAAT model from our paper:
+Run `train.sh` to train the model with DTA (Divide-Then-Align) methodology. For convenience, [here](https://huggingface.co/collections/Itandy/divide-then-align-6879b57c2dd422188a27c0d4) we release the checkpoints trained using the default hyperparameter settings. The following command reproduces the DTA-trained RAAT model from our paper:
 
 <details>
 <summary>📋 Training Script</summary>
